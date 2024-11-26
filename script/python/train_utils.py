@@ -1,6 +1,9 @@
 # train_utils.py
 import torch
 import time
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
 
 class EarlyStopping:
     def __init__(self, patience=5, delta=0, verbose=False, path='checkpoint.pth'):
@@ -14,24 +17,29 @@ class EarlyStopping:
 
     def __call__(self, val_loss, model):
         if self.best_loss is None:
+            # First epoch, set the best loss and save the model
             self.best_loss = val_loss
-            self.save_checkpoint(val_loss, model)
+            self.save_checkpoint(val_loss, model, initial=True)
         elif val_loss > self.best_loss - self.delta:
+            # Validation loss did not improve
             self.counter += 1
             if self.verbose:
                 print(f"EarlyStopping counter: {self.counter} out of {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            self.best_loss = val_loss
+            # Validation loss improved
             self.save_checkpoint(val_loss, model)
+            self.best_loss = val_loss
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model):
+    def save_checkpoint(self, val_loss, model, initial=False):
         if self.verbose:
-            print(f'Validation loss decreased ({self.best_loss:.6f} --> {val_loss:.6f}).  Saving model...')
+            if initial:
+                print(f'Validation loss set to {val_loss:.6f} at the start. Saving model...')
+            else:
+                print(f'Validation loss decreased ({self.best_loss:.6f} --> {val_loss:.6f}). Saving model...')
         torch.save(model.state_dict(), self.path)
-
 
 
 
@@ -116,3 +124,8 @@ def evaluate_model(model, test_loader, criterion, device):
     print(f'Test Loss: {avg_test_loss}, Test Accuracy: {test_accuracy:.2f}%')
 
     return avg_test_loss, test_accuracy
+
+
+
+
+

@@ -2,6 +2,7 @@
 import torch 
 import torch.nn as nn
 from torchvision import models
+from torchvision.models import vit_b_16
 
 
 class SimpleConvClassifier(nn.Module):
@@ -27,11 +28,28 @@ def create_pretrained_model(num_classes=7, freeze_layers=True):
     model = models.resnet50(weights="IMAGENET1K_V2")
     
     if freeze_layers:
+        # Freeze initial layers
+        for name, param in model.named_parameters():
+            if "layer4" not in name and "fc" not in name:
+                param.requires_grad = False
+
+    # Replace the fully connected layer
+    in_features = model.fc.in_features
+    model.fc = nn.Linear(in_features, num_classes)
+
+    return model
+
+def create_vit_model(num_classes=7, pretrained=True,freeze_backbone = True):
+    # Load the pretrained ViT model
+    model = vit_b_16(weights="IMAGENET1K_V1" if pretrained else None)
+
+    if freeze_backbone:
+        # Freeze all layers except the classifier head
         for param in model.parameters():
             param.requires_grad = False
 
-
-    in_features = model.fc.in_features
-    model.fc = nn.Linear(in_features, num_classes)
+    # Replace the classifier head
+    in_features = model.heads.head.in_features
+    model.heads.head = nn.Linear(in_features, num_classes)
 
     return model
