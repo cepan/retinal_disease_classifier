@@ -19,7 +19,10 @@ if __name__ == '__main__':
     # Load model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = create_pretrained_model(num_classes=7, freeze_layers=False).to(device)
-    checkpoint = torch.load(config.BEST_MODEL_PATH, weights_only=True)
+    if visualization_method == "grad_cam":
+        checkpoint = torch.load(config.BEST_RESNET_PATH, weights_only=True)
+    else:
+        checkpoint = torch.load(config.BEST_VIT_PATH, weights_only=True)
     model.load_state_dict(checkpoint)
     
     model.eval()
