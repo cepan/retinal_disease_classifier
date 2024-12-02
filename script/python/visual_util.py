@@ -64,14 +64,26 @@ def visualize_heatmap(image, heatmap, alpha=0.4):
 
 
 
-def visualize_attention_map(model, inputs, layer_index=11, head_index=0):
-
+def visualize_attention(model, dataloader, device):
+    """
+    Visualizes the attention map for a batch of images.
+    Args:
+        model: Trained Vision Transformer with attention extraction.
+        dataloader: DataLoader for test images.
+        device: Device to run the model on.
+    """
+    model.eval()
     with torch.no_grad():
-        # Forward pass to extract attention
-        outputs = model(inputs, return_attention=True)  
-        attention = outputs["attentions"][layer_index] 
+        for images, labels in dataloader:
+            images, labels = images.to(device), labels.to(device)
+            logits, attentions = model(images)
+            if attentions is not None:
+                # Select one sample and visualize its attention
+                attention_map = attentions[-1][0].cpu().numpy()  # Take last layer's attention
+                # Plot attention map here
+                print("Attention map shape:", attention_map.shape)
+            else:
+                print("No attention maps available.")
+            break
 
-    
-    attention_map = attention[0, head_index] 
 
-    return attention_map

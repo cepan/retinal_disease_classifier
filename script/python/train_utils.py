@@ -55,7 +55,10 @@ def train_model(model, train_loader, validation_loader, criterion, optimizer, ea
             images, labels = images.to(device), labels.to(device)
 
             # Forward pass
-            outputs = model(images)           
+            outputs = model(images)  
+            if isinstance(outputs, tuple):  # Handle cases where model returns a tuple
+                outputs = outputs[0]       # Extract logits
+            
             loss = criterion(outputs, labels) 
 
             # Backward pass and optimization
@@ -80,6 +83,9 @@ def train_model(model, train_loader, validation_loader, criterion, optimizer, ea
                 images, labels = images.to(device), labels.to(device)
 
                 outputs = model(images)
+                if isinstance(outputs, tuple):  # Handle cases where model returns a tuple
+                    outputs = outputs[0]       # Extract logits
+
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
 
